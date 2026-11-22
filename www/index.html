@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ट्रिप हिसाब</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#1b2237;--muted:#6b7490;--line:#e6e9f2;--pri:#5b4bdb;--pri2:#8a5cf6;--ok:#12a36b;--bad:#e5484d;--chip:#eef0fa;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1220;--card:#181c30;--text:#eef0fa;--muted:#9aa3c4;--line:#262b45;--chip:#222747;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Hind',system-ui,sans-serif;font-size:16px}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px 90px}
+.hero{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;margin:0 -16px 16px;padding:22px 20px 26px;border-radius:0 0 28px 28px}
+.hero h1{margin:0;font-size:24px;font-weight:700}
+.hero p{margin:2px 0 14px;opacity:.85;font-size:14px}
+.stats{display:flex;gap:10px}
+.stat{flex:1;background:rgba(255,255,255,.18);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:20px}.stat span{font-size:12px;opacity:.85}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(30,40,90,.05)}
+h2{font-size:17px;margin:0 0 12px}
+input,select{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+input:focus,select:focus{outline:2px solid var(--pri);border-color:transparent}
+.row{display:flex;gap:8px}.row input{margin:0}
+button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:12px 16px;cursor:pointer;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+button.full{width:100%}button.ghost{background:var(--chip);color:var(--text)}
+button.x{background:none;color:var(--muted);padding:4px 8px;font-size:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{background:var(--chip);color:var(--text);padding:8px 14px;border-radius:99px;font-size:14px;border:1.5px solid transparent;cursor:pointer;font-weight:500}
+.chip.on{border-color:var(--pri);background:rgba(91,75,219,.14);color:var(--pri)}
+.chip.p{display:inline-flex;align-items:center;gap:4px;cursor:default}
+.item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);gap:8px}
+.item:last-child{border:0}
+.item small{color:var(--muted);display:block;font-size:13px}
+.amt{font-weight:700;white-space:nowrap}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+.tabs button{flex:1;background:none;color:var(--muted);border-radius:12px;padding:8px;font-size:14px}
+.tabs button.on{color:var(--pri);background:var(--chip)}
+.pay{display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pay:last-child{border:0}
+.pay .a{font-weight:600}.pay .arr{color:var(--muted)}
+.pay .m{margin-left:auto;font-weight:700;color:var(--bad);font-size:18px}
+.pos{color:var(--ok)}.neg{color:var(--bad)}
+.empty{color:var(--muted);text-align:center;padding:18px 0}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1 id="title">🧳 ट्रिप हिसाब</h1>
+    <p>सबका खर्चा, एक जगह — बराबर बँटवारा</p>
+    <div class="stats"><div class="stat"><b id="sTotal">₹0</b><span>कुल खर्चा</span></div><div class="stat"><b id="sPeople">0</b><span>लोग</span></div><div class="stat"><b id="sExp">0</b><span>एंट्री</span></div></div>
+  </div>
+
+  <section id="v-people">
+    <div class="card"><h2>👥 ट्रिप पर कौन-कौन गया?</h2>
+      <div class="row"><input id="pn" placeholder="नाम लिखो (जैसे: राहुल)"><button id="addP">जोड़ो</button></div>
+      <div class="chips" id="plist" style="margin-top:12px"></div>
+    </div>
+    <div class="card"><h2>✏️ ट्रिप का नाम</h2><input id="tn" placeholder="जैसे: मनाली ट्रिप 2026"></div>
+    <button class="ghost full" id="reset">🗑️ नई ट्रिप शुरू करो</button>
+  </section>
+
+  <section id="v-exp" class="hide">
+    <div class="card"><h2>➕ नया खर्चा</h2>
+      <input id="ed" placeholder="किस चीज़ का? (चाय, नाश्ता...)">
+      <input id="ea" type="number" inputmode="decimal" placeholder="कुल रकम ₹ (जैसे 225)">
+      <select id="ep"></select>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:8px">किन-किन के बीच बाँटना है? (टैप करो)</div>
+      <div class="chips" id="esplit"></div>
+      <button class="full" id="addE">खर्चा जोड़ो</button>
+    </div>
+    <div class="card"><h2>🧾 सारे खर्चे</h2><div id="elist"></div></div>
+  </section>
+
+  <section id="v-settle" class="hide">
+    <button class="full" id="calc" style="margin-bottom:14px">🏁 ट्रिप खत्म — हिसाब करो</button>
+    <div id="result"></div>
+  </section>
+</div>
+
+<nav class="tabs">
+  <button data-t="people" class="on">👥 लोग</button>
+  <button data-t="exp">🧾 खर्चे</button>
+  <button data-t="settle">💸 हिसाब</button>
+</nav>
+
+<script>
+var S={name:'',people:[],exp:[]},split=[];
+try{var r=localStorage.getItem('tripHisaab');if(r)S=JSON.parse(r)}catch(e){}
+function save(){try{localStorage.setItem('tripHisaab',JSON.stringify(S))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function money(n){return '₹'+(Math.round(n*100)/100).toLocaleString('en-IN')}
+function nm(id){var p=S.people.find(function(x){return x.id===id});return p?p.n:'?'}
+
+function render(){
+  var tot=S.exp.reduce(function(a,e){return a+e.a},0);
+  $('sTotal').textContent=money(tot);$('sPeople').textContent=S.people.length;$('sExp').textContent=S.exp.length;
+  $('title').textContent='🧳 '+(S.name||'ट्रिप हिसाब');$('tn').value=S.name||'';
+  $('plist').innerHTML=S.people.length?S.people.map(function(p){return '<span class="chip p">'+esc(p.n)+'<button class="x" data-del="'+p.id+'">×</button></span>'}).join(''):'<div class="empty" style="width:100%">पहले सबके नाम जोड़ो</div>';
+  $('ep').innerHTML=S.people.map(function(p){return '<option value="'+p.id+'">'+esc(p.n)+' ने पैसे दिए</option>'}).join('');
+  split=split.filter(function(id){return S.people.some(function(p){return p.id===id})});
+  drawSplit();
+  $('elist').innerHTML=S.exp.length?S.exp.slice().reverse().map(function(e){return '<div class="item"><div>'+esc(e.d)+'<small>'+esc(nm(e.p))+' ने दिए · '+e.s.length+' लोगों में · '+money(e.a/e.s.length)+' प्रति व्यक्ति</small></div><div class="amt">'+money(e.a)+'<button class="x" data-xe="'+e.id+'">×</button></div></div>'}).join(''):'<div class="empty">अभी कोई खर्चा नहीं</div>';
+  save();
+}
+function drawSplit(){
+  $('esplit').innerHTML='<button class="chip ghost" data-all="1">सब</button>'+S.people.map(function(p){return '<button class="chip'+(split.indexOf(p.id)>-1?' on':'')+'" data-s="'+p.id+'">'+esc(p.n)+'</button>'}).join('');
+}
+$('addP').onclick=function(){var v=$('pn').value.trim();if(!v)return;S.people.push({id:Date.now()+Math.random(),n:v});split=S.people.map(function(p){return p.id});$('pn').value='';render()};
+$('pn').onkeydown=function(e){if(e.key==='Enter')$('addP').click()};
+$('tn').oninput=function(){S.name=this.value;$('title').textContent='🧳 '+(S.name||'ट्रिप हिसाब');save()};
+document.addEventListener('click',function(e){
+  var t=e.target;
+  if(t.dataset.del){var id=+t.dataset.del;if(S.exp.some(function(x){return x.p===id||x.s.indexOf(id)>-1})){alert('इस बंदे के खर्चे जुड़े हैं, पहले वो खर्चे हटाओ।');return}S.people=S.people.filter(function(p){return p.id!==id});render()}
+  if(t.dataset.xe){S.exp=S.exp.filter(function(x){return x.id!==+t.dataset.xe});render()}
+  if(t.dataset.s){var id=+t.dataset.s,i=split.indexOf(id);i>-1?split.splice(i,1):split.push(id);drawSplit()}
+  if(t.dataset.all){split=S.people.map(function(p){return p.id});drawSplit()}
+  if(t.dataset.t){['people','exp','settle'].forEach(function(k){$('v-'+k).classList.toggle('hide',k!==t.dataset.t)});document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b===t)});window.scrollTo(0,0)}
+});
+$('addE').onclick=function(){
+  var a=parseFloat($('ea').value),d=$('ed').value.trim()||'खर्चा';
+  if(!(a>0)){alert('रकम सही डालो');return}
+  if(!S.people.length){alert('पहले लोग जोड़ो');return}
+  if(!split.length){alert('कम से कम एक बंदा चुनो');return}
+  S.exp.push({id:Date.now(),d:d,a:a,p:+$('ep').value,s:split.slice()});
+  $('ea').value='';$('ed').value='';render();
+};
+$('reset').onclick=function(){if(confirm('सारा डेटा मिट जाएगा। पक्का?')){S={name:'',people:[],exp:[]};split=[];render()}};
+
+$('calc').onclick=function(){
+  var bal={},paid={},share={},owe={},dues={},recv={},r2=function(n){return Math.round(n*100)/100};
+  S.people.forEach(function(p){bal[p.id]=0;paid[p.id]=0;share[p.id]=0;owe[p.id]={};dues[p.id]=[];recv[p.id]=[]});
+  S.exp.forEach(function(e){paid[e.p]+=e.a;bal[e.p]+=e.a;var x=e.a/e.s.length;e.s.forEach(function(id){share[id]+=x;bal[id]-=x;if(id!==e.p)owe[id][e.p]=(owe[id][e.p]||0)+x})});
+  S.people.forEach(function(a){S.people.forEach(function(b){
+    if(a.id>=b.id)return;
+    var d=r2((owe[a.id][b.id]||0)-(owe[b.id][a.id]||0));
+    if(d>0.01){dues[a.id].push({o:b.id,v:d});recv[b.id].push({o:a.id,v:d})}
+    else if(d<-0.01){dues[b.id].push({o:a.id,v:-d});recv[a.id].push({o:b.id,v:-d})}
+  })});
+  var cr=[],db=[];
+  S.people.forEach(function(p){var b=r2(bal[p.id]);if(b>0.01)cr.push({id:p.id,v:b});else if(b<-0.01)db.push({id:p.id,v:-b})});
+  var tx=[],i=0,j=0;
+  while(i<db.length&&j<cr.length){var m=Math.min(db[i].v,cr[j].v);tx.push({f:db[i].id,t:cr[j].id,v:m});db[i].v-=m;cr[j].v-=m;if(db[i].v<0.01)i++;if(cr[j].v<0.01)j++}
+  var total=S.exp.reduce(function(a,e){return a+e.a},0);
+  var fast=false;
+  var h='<button class="ghost full" id="fb" style="margin-bottom:14px">⚡ फास्ट पेमेंट (कम से कम ट्रांसफर)</button><div class="card" id="pp"><h2>👤 हर बंदे को क्या करना है</h2>';
+  h+=S.people.map(function(p){
+    var d=dues[p.id],r=recv[p.id],x='<div style="padding:12px 0;border-bottom:1px solid var(--line)"><div style="font-weight:700;margin-bottom:6px">'+esc(p.n)+' <small style="font-weight:400;color:var(--muted)">(दिए '+money(paid[p.id])+' · हिस्सा '+money(share[p.id])+')</small></div>';
+    d.forEach(function(k){x+='<div class="item" style="padding:6px 0;border:0"><span>➡️ <b>'+esc(nm(k.o))+'</b> को देने हैं</span><span class="amt neg">'+money(k.v)+'</span></div>'});
+    r.forEach(function(k){x+='<div class="item" style="padding:6px 0;border:0"><span>⬅️ <b>'+esc(nm(k.o))+'</b> से मिलेंगे</span><span class="amt pos">'+money(k.v)+'</span></div>'});
+    if(!d.length&&!r.length)x+='<div style="color:var(--muted)">✓ कुछ लेना-देना नहीं</div>';
+    return x+'</div>'}).join('');
+  h+='</div><div class="card hide" id="fast"><h2>⚡ फास्ट पेमेंट</h2><div style="font-size:13px;color:var(--muted);margin-bottom:6px">सबका हिसाब जोड़कर सबसे कम ट्रांसफर में निपटारा</div>';
+  h+=tx.length?tx.map(function(x){return '<div class="pay"><span class="a">'+esc(nm(x.f))+'</span><span class="arr">→ देगा →</span><span class="a">'+esc(nm(x.t))+'</span><span class="m">'+money(x.v)+'</span></div>'}).join(''):'<div class="empty">🎉 सब बराबर है!</div>';
+  h+='</div><button class="full" id="sh" style="margin-bottom:10px">📤 WhatsApp पर शेयर करो</button><button class="ghost full" id="cp">📋 कॉपी करो</button>';
+  $('result').innerHTML=h;
+  var txt0='🧳 '+(S.name||'ट्रिप हिसाब')+'\nकुल खर्चा: '+money(total)+'\n';
+  S.people.forEach(function(p){
+    var d=dues[p.id],r=recv[p.id];if(!d.length&&!r.length)return;
+    txt0+='\n👤 '+p.n+':';
+    d.forEach(function(k){txt0+='\n  ➡️ '+nm(k.o)+' को '+money(k.v)+' देने हैं'});
+    r.forEach(function(k){txt0+='\n  ⬅️ '+nm(k.o)+' से '+money(k.v)+' मिलेंगे'});
+  });
+  if(!S.people.some(function(p){return dues[p.id].length}))txt0+='\nसब बराबर!';
+  var txtF='⚡ '+(S.name||'ट्रिप हिसाब')+' — फास्ट पेमेंट\nकुल खर्चा: '+money(total)+'\n\n'+(tx.length?tx.map(function(x){return nm(x.f)+' → '+nm(x.t)+': '+money(x.v)}).join('\n'):'सब बराबर!');
+  $('fb').onclick=function(){fast=!fast;$('pp').classList.toggle('hide',fast);$('fast').classList.toggle('hide',!fast);this.textContent=fast?'👤 हर बंदे का हिसाब देखो':'⚡ फास्ट पेमेंट (कम से कम ट्रांसफर)'};
+  $('cp').onclick=function(){var txt=fast?txtF:txt0;try{navigator.clipboard.writeText(txt).then(function(){$('cp').textContent='✅ कॉपी हो गया'})}catch(e){prompt('कॉपी करो:',txt)}};
+  $('sh').onclick=function(){
+    var txt=fast?txtF:txt0;
+    var C=window.Capacitor,pl=C&&C.Plugins&&C.Plugins.Share;
+    if(pl){pl.share({title:S.name||'ट्रिप हिसाब',text:txt,dialogTitle:'हिसाब शेयर करो'}).catch(function(){})}
+    else if(navigator.share){navigator.share({title:S.name||'ट्रिप हिसाब',text:txt}).catch(function(){})}
+    else{window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')}
+  };
+};
+render();
+</script>
+</body>
+</html>
