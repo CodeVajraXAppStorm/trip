@@ -26,8 +26,17 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
-      - name: Generate app icons
-        run: npx capacitor-assets generate --android --iconBackgroundColor '#0a0a0f' --iconBackgroundColorDark '#0a0a0f'
+      - name: Set app icon
+        run: |
+          test -f assets/icon-only.png || { echo "assets/icon-only.png nahi mila"; ls -R . | head -50; exit 1; }
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            n=${d%%:*}; s=${d##*:}
+            dir=android/app/src/main/res/mipmap-$n
+            mkdir -p $dir
+            convert assets/icon-only.png -resize ${s}x${s} $dir/ic_launcher.png
+            cp $dir/ic_launcher.png $dir/ic_launcher_round.png
+          done
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
 
       - name: Apply custom AndroidManifest
         run: cp android-overrides/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
