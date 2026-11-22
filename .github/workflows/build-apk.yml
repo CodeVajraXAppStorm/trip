@@ -26,6 +26,9 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Generate app icons
+        run: npx capacitor-assets generate --android --iconBackgroundColor '#0a0a0f' --iconBackgroundColorDark '#0a0a0f'
+
       - name: Apply custom AndroidManifest
         run: cp android-overrides/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
 
