@@ -16,6 +16,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Hind',system-u
 .top{display:flex;align-items:center;gap:12px}
 .ic{background:rgba(255,255,255,.2);color:#fff;width:42px;height:42px;padding:0;font-size:22px;border-radius:12px;flex:none}
 .hero h1{margin:0;font-size:24px;font-weight:700}
+.lg{width:52px;height:52px;margin-left:auto;flex:none;border-radius:14px;object-fit:cover}
 .hero p{margin:6px 0 14px;opacity:.85;font-size:14px}
 .stats{display:flex;gap:10px}
 .stat{flex:1;background:rgba(255,255,255,.18);border-radius:14px;padding:10px 12px}
@@ -64,7 +65,7 @@ button.red{background:var(--bad);color:#fff}
 <body>
 <div class="wrap">
   <div class="hero">
-    <div class="top"><button class="ic" id="menu">☰</button><h1 id="title">🧳 ट्रिप हिसाब</h1></div>
+    <div class="top"><button class="ic" id="menu">☰</button><h1 id="title">🧳 ट्रिप हिसाब</h1><img class="lg" src="logo.png" alt=""></div>
     <p>सबका खर्चा, एक जगह — बराबर बँटवारा</p>
     <div class="stats"><div class="stat"><b id="sTotal">₹0</b><span>कुल खर्चा</span></div><div class="stat"><b id="sPeople">0</b><span>लोग</span></div><div class="stat"><b id="sExp">0</b><span>एंट्री</span></div></div>
   </div>
@@ -197,15 +198,11 @@ function openTbl(){
 function showTbl(id){
   var T=ALL.find(function(x){return x.id===id});if(!T)return;
   dMode='tbl2';$('dT').textContent=T.name||'बिना नाम की ट्रिप';
-  var R=calc(T),n=T.people.length,sh=T.people.map(function(p){return R.share[p.id]});
-  var eq=n>0&&sh.every(function(v){return Math.abs(v-sh[0])<0.01});
-  var h='<div class="card"><div class="item" style="border:0;padding:4px 0"><span>कुल खर्चा</span><span class="amt">'+money(R.total)+'</span></div>';
-  if(eq)h+='<div class="item" style="border:0;padding:4px 0"><span>प्रति व्यक्ति हिस्सा</span><span class="amt">'+money(sh[0])+'</span></div>';
-  h+='<div class="item" style="border:0;padding:4px 0"><span>सदस्य</span><span class="amt">'+n+'</span></div></div>';
-  h+='<div class="card"><div class="tw"><table class="tb"><tr><th>सदस्य</th><th>शुरुआती भुगतान</th><th>कुल हिस्सा</th><th>हिसाब (निपटारा)</th></tr>';
+  var R=calc(T);
+  var h='<div class="card"><div class="tw"><table class="tb"><tr><th>सदस्य</th><th>शुरुआती भुगतान</th><th>कुल हिस्सा</th><th>हिसाब (निपटारा)</th></tr>';
   h+=T.people.map(function(p){
     var d=R.dues[p.id],r=R.recv[p.id],c='',rs=r.reduce(function(a,k){return a+k.v},0);
-    if(r.length)c+='<b class="pos">'+money(rs)+' लेने हैं</b><small style="display:block;color:var(--muted)">'+r.map(function(k){return esc(nm(T,k.o))+' से '+money(k.v)}).join(', ')+'</small>';
+    if(r.length)c+='<div class="pos"><b>'+money(rs)+'</b> लेने हैं</div>';
     d.forEach(function(k){c+='<div class="neg">'+esc(nm(T,k.o))+' को <b>'+money(k.v)+'</b> देने हैं</div>'});
     if(!r.length&&!d.length)c='✓ बराबर';
     return '<tr><td><b>'+esc(p.n)+'</b></td><td>'+money(R.paid[p.id])+'</td><td>'+money(R.share[p.id])+'</td><td>'+c+'</td></tr>'}).join('');
