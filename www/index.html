@@ -54,6 +54,11 @@ button.red{background:var(--bad);color:#fff}
 .live{color:var(--ok);font-size:12px;font-weight:700}
 .det{position:fixed;inset:0;background:var(--bg);z-index:40;overflow-y:auto;padding:env(safe-area-inset-top,0px) 16px calc(24px + env(safe-area-inset-bottom,0px))}
 .bar{display:flex;align-items:center;gap:10px;padding:14px 0}
+.tw{overflow-x:auto}
+.tb{width:100%;border-collapse:collapse;font-size:14px}
+.tb th{color:var(--muted);text-align:left;font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line)}
+.tb td{padding:12px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.tb tr:last-child td{border:0}
 </style>
 </head>
 <body>
@@ -107,6 +112,7 @@ button.red{background:var(--bad);color:#fff}
   <button class="ghost full" id="bPick" style="margin-bottom:8px">📁 फोल्डर चुनो / बदलो</button>
   <button class="ghost full" id="bNow" style="margin-bottom:8px">💾 अभी बैकअप करो</button>
   <button class="ghost full" id="bRes">♻️ फोल्डर से रिस्टोर करो</button>
+  <button class="full" id="bTbl" style="margin-top:16px">📊 हिसाब तालिका देखो</button>
 </aside>
 
 <div id="det" class="det hide">
@@ -129,7 +135,7 @@ function upsert(T){var c=JSON.parse(JSON.stringify(T)),i=ALL.findIndex(function(
 function dt(u){try{return new Date(u).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}catch(e){return ''}}
 
 var S=ld('tripHisaab',null)||{name:'',people:[],exp:[]};if(!S.id)S.id=uid();
-var ALL=ld('tripHisaabAll',[]),split=[],folder=null,bt,lastJ=sig(S);
+var ALL=ld('tripHisaabAll',[]),split=[],folder=null,bt,lastJ=sig(S),dMode='';
 if(!empty(S)&&!ALL.some(function(a){return a.id===S.id})){S.u=S.u||Date.now();upsert(S);st('tripHisaabAll',ALL)}
 
 /* ---------- बैकअप फोल्डर ---------- */
@@ -180,10 +186,35 @@ $('menu').onclick=openDr;$('ov').onclick=closeDr;
 $('newT').onclick=function(){closeDr();newTrip()};
 $('bPick').onclick=pick;$('bRes').onclick=restore;
 $('bNow').onclick=function(){if(!plug()||!folder){alert('पहले फोल्डर चुनो');return}bkAll().then(function(){alert('बैकअप हो गया ✅ ('+ALL.length+' ट्रिप)')}).catch(function(e){alert('बैकअप नहीं हुआ: '+(e&&e.message||e))})};
-$('dBack').onclick=function(){$('det').classList.add('hide')};
+$('dBack').onclick=function(){if(dMode==='tbl2')openTbl();else $('det').classList.add('hide')};
+$('bTbl').onclick=openTbl;
+function openTbl(){
+  closeDr();dMode='tbl';$('dT').textContent='📊 हिसाब तालिका';
+  var l=ALL.slice().sort(function(a,b){return (b.u||0)-(a.u||0)});
+  $('dB').innerHTML='<div class="card"><h2>कौन सी ट्रिप का हिसाब देखना है?</h2>'+(l.length?l.map(function(T){return '<div class="item trip" data-ot2="'+T.id+'"><div><b>'+esc(T.name||'बिना नाम की ट्रिप')+'</b><small>'+T.people.length+' लोग · '+money(tot(T))+' · '+dt(T.u)+'</small></div><span>›</span></div>'}).join(''):'<div class="empty">अभी कोई ट्रिप सेव नहीं है</div>')+'</div>';
+  $('det').classList.remove('hide');$('det').scrollTop=0;
+}
+function showTbl(id){
+  var T=ALL.find(function(x){return x.id===id});if(!T)return;
+  dMode='tbl2';$('dT').textContent=T.name||'बिना नाम की ट्रिप';
+  var R=calc(T),n=T.people.length,sh=T.people.map(function(p){return R.share[p.id]});
+  var eq=n>0&&sh.every(function(v){return Math.abs(v-sh[0])<0.01});
+  var h='<div class="card"><div class="item" style="border:0;padding:4px 0"><span>कुल खर्चा</span><span class="amt">'+money(R.total)+'</span></div>';
+  if(eq)h+='<div class="item" style="border:0;padding:4px 0"><span>प्रति व्यक्ति हिस्सा</span><span class="amt">'+money(sh[0])+'</span></div>';
+  h+='<div class="item" style="border:0;padding:4px 0"><span>सदस्य</span><span class="amt">'+n+'</span></div></div>';
+  h+='<div class="card"><div class="tw"><table class="tb"><tr><th>सदस्य</th><th>शुरुआती भुगतान</th><th>कुल हिस्सा</th><th>हिसाब (निपटारा)</th></tr>';
+  h+=T.people.map(function(p){
+    var d=R.dues[p.id],r=R.recv[p.id],c='',rs=r.reduce(function(a,k){return a+k.v},0);
+    if(r.length)c+='<b class="pos">'+money(rs)+' लेने हैं</b><small style="display:block;color:var(--muted)">'+r.map(function(k){return esc(nm(T,k.o))+' से '+money(k.v)}).join(', ')+'</small>';
+    d.forEach(function(k){c+='<div class="neg">'+esc(nm(T,k.o))+' को <b>'+money(k.v)+'</b> देने हैं</div>'});
+    if(!r.length&&!d.length)c='✓ बराबर';
+    return '<tr><td><b>'+esc(p.n)+'</b></td><td>'+money(R.paid[p.id])+'</td><td>'+money(R.share[p.id])+'</td><td>'+c+'</td></tr>'}).join('');
+  h+='</table></div></div>';
+  $('dB').innerHTML=h;$('det').scrollTop=0;
+}
 
 function openTrip(id){
-  var T=ALL.find(function(x){return x.id===id});if(!T)return;closeDr();
+  var T=ALL.find(function(x){return x.id===id});if(!T)return;closeDr();dMode='';
   $('dT').textContent=T.name||'बिना नाम की ट्रिप';
   var h='<div class="card"><div class="item" style="border:0;padding:4px 0"><span>कुल खर्चा</span><span class="amt">'+money(tot(T))+'</span></div><div class="item" style="border:0;padding:4px 0"><span>लोग</span><span class="amt">'+T.people.length+'</span></div><div class="item" style="border:0;padding:4px 0"><span>तारीख</span><span class="amt">'+dt(T.u)+'</span></div></div><div class="dres"></div>';
   h+='<div class="card"><h2>🧾 किसने कितने दिए</h2>'+(T.exp.length?T.exp.map(function(e){return '<div class="item"><div>'+esc(e.d)+'<small>'+esc(nm(T,e.p))+' ने दिए · '+e.s.map(function(x){return esc(nm(T,x))}).join(', ')+' में बँटा</small></div><div class="amt">'+money(e.a)+'</div></div>'}).join(''):'<div class="empty">कोई खर्चा नहीं</div>')+'</div>';
@@ -203,6 +234,8 @@ $('pn').onkeydown=function(e){if(e.key==='Enter')$('addP').click()};
 $('tn').oninput=function(){S.name=this.value;$('title').textContent='🧳 '+(S.name||'ट्रिप हिसाब');save()};
 document.addEventListener('click',function(e){
   var t=e.target,it=t.closest?t.closest('[data-ot]'):null;
+  var it2=t.closest?t.closest('[data-ot2]'):null;
+  if(it2){showTbl(it2.dataset.ot2);return}
   if(it){openTrip(it.dataset.ot);return}
   if(t.dataset.del){var id=+t.dataset.del;if(S.exp.some(function(x){return x.p===id||x.s.indexOf(id)>-1})){alert('इस बंदे के खर्चे जुड़े हैं, पहले वो खर्चे हटाओ।');return}S.people=S.people.filter(function(p){return p.id!==id});render()}
   if(t.dataset.xe){S.exp=S.exp.filter(function(x){return x.id!==+t.dataset.xe});render()}
