@@ -1,0 +1,8 @@
+{
+  "appId": "com.tripsplit.hisaab",
+  "appName": "ट्रिप हिसाब",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
